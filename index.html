@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বাৎসরিক ইপিআই মাইক্রোপ্ল্যানিং ও সরকারি বর্ষপঞ্জি</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap" rel="stylesheet">
+    <!-- html2pdf.js, html2canvas External Libraries for Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'SolaimanLipi', 'Tiro Bangla', 'Siyam Rupali', sans-serif;
+            background-color: #f3f4f6;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: #fff; }
+            .print-container { width: 100% !important; max-width: none !important; padding: 0 !important; }
+            .page-break { page-break-before: always; }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #059669;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased p-2 md:p-6">
+
+    <div id="export-area" class="max-w-[1500px] mx-auto bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6 print-container">
+        
+        <!-- Header Section -->
+        <header class="border-b-2 border-emerald-700 pb-4 mb-6 text-center relative">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-2">
+                <div class="text-left hidden md:block">
+                    <span class="inline-block bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-emerald-300">
+                        ইপিআই ডিজিটাল মাইক্রোপ্ল্যান
+                    </span>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-emerald-900 leading-tight">
+                        সম্প্রসারিত টিকাদান কর্মসূচি (EPI) - বাৎসরিক মাইক্রোপ্ল্যান
+                    </h1>
+                    <h2 class="text-md md:text-lg font-medium text-gray-600 mt-1" id="plan-year-title">
+                        বছর: ২০২৬
+                    </h2>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 block md:inline-block">
+                        ডেভেলপার: এস.এম.রাসেল কবির
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Control Bar -->
+        <div class="no-print bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-center justify-between shadow-sm">
+            <div class="flex flex-wrap items-center gap-4">
+                <div>
+                    <label for="year-select" class="block text-xs font-bold text-emerald-900 mb-1">বছর নির্বাচন:</label>
+                    <select id="year-select" onchange="onYearChange()" class="bg-white border border-emerald-400 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2 font-semibold">
+                    </select>
+                </div>
+
+                <div>
+                    <label for="pair-select" class="block text-xs font-bold text-emerald-900 mb-1">প্রাথমিক সেশন জোড় বার:</label>
+                    <select id="pair-select" onchange="resetConfirmation()" class="bg-white border border-emerald-400 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2 font-semibold">
+                        <option value="mon-thu">সোম - বৃহস্পতিবার </option>
+                        <option value="sun-wed">রবি - বুধবার</option>
+                        <option value="sat-tue">শনি - মঙ্গলবার</option>
+                    </select>
+                </div>
+
+                <div class="text-xs text-emerald-800 bg-white p-2 rounded border border-emerald-300 max-w-md">
+                    ℹ️ <strong>নির্দেশনা:</strong> ব্লকের নাম ও কেন্দ্রের ওপর ক্লিক করে যেকোনো সময় পরিবর্তন করতে পারবেন। ছুটির তালিকা নিশ্চিত করে যেকোনো একটি ঘরে এন্ট্রি দিলে বাকি ঘর স্বয়ংক্রিয়ভাবে তৈরি হবে।
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <button onclick="window.print()" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-150 flex items-center gap-1 text-xs md:text-sm">
+                    🖨️ প্রিন্ট
+                </button>
+                <button onclick="exportToPDF()" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-150 flex items-center gap-1 text-xs md:text-sm">
+                    📄 PDF ডাউনলোড
+                </button>
+                <button onclick="exportToImage()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-150 flex items-center gap-1 text-xs md:text-sm">
+                    🖼️ ইমেজ (PNG)
+                </button>
+                <button onclick="exportToWord()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-150 flex items-center gap-1 text-xs md:text-sm">
+                    📝 Word (.doc)
+                </button>
+                <button onclick="exportToExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-3 rounded-lg shadow transition duration-150 flex items-center gap-1 text-xs md:text-sm">
+                    📊 এক্সেল
+                </button>
+            </div>
+        </div>
+
+        <!-- Custom Holiday Input & Confirmation -->
+        <div class="no-print bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-xs md:text-sm">
+            <div class="font-bold text-amber-900 mb-2 flex items-center justify-between">
+                <span>📅 সরকারি ও স্থানীয় ছুটির তালিকা এবং কাস্টম ছুটি সংযোজন:</span>
+                <span id="lock-status-badge" class="bg-red-100 text-red-800 px-2.5 py-1 rounded border border-red-300 text-xs font-bold">
+                    ⚠️ ছুটির তালিকা এখনো নিশ্চিত করা হয়নি
+                </span>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-3">
+                <input type="date" id="custom-holiday-date" class="border border-amber-400 p-1.5 rounded bg-white text-gray-800">
+                <input type="text" id="custom-holiday-name" placeholder="ছুটির নাম (যেমন: স্থানীয় মেলা / বিশেষ ছুটি)" class="border border-amber-400 p-1.5 rounded bg-white flex-1 min-w-[200px]">
+                <button onclick="addCustomHoliday()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded transition">
+                    + ছুটি যুক্ত করুন
+                </button>
+            </div>
+            <div id="holiday-tags-container" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pt-1 border-t border-amber-200 mb-3">
+            </div>
+            <div class="flex justify-end">
+                <button onclick="confirmHolidayList()" id="confirm-holiday-btn" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-5 py-2 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                    ✅ ছুটির তালিকা নিশ্চিত করুন ও ছক চালু করুন
+                </button>
+            </div>
+        </div>
+
+        <!-- Interactive Calendar View -->
+        <div class="no-print mb-8">
+            <div class="flex justify-between items-center bg-gray-100 p-3 rounded-t-lg border border-gray-300">
+                <h3 class="font-bold text-emerald-900 text-md flex items-center gap-2">
+                    🏛️ সরকারি বর্ষপঞ্জি ও ছুটির ক্যালেন্ডার ভিউ
+                </h3>
+                <button onclick="toggleCalendar()" id="toggle-cal-btn" class="text-xs bg-emerald-700 text-white px-2.5 py-1 rounded hover:bg-emerald-800">
+                    সংকোচন / সম্প্রসারণ
+                </button>
+            </div>
+            <div id="gov-calendar-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 bg-gray-50 p-3 rounded-b-lg border-x border-b border-gray-300">
+            </div>
+        </div>
+
+        <!-- Table Display -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-emerald-900 text-lg border-l-4 border-emerald-700 pl-2">
+                    📋 বাৎসরিক ইপিআই সেশন সূচি
+                </h3>
+                <span class="text-xs text-gray-500 italic" id="table-instruction">* ছুটির তালিকা নিশ্চিত করার পর এন্ট্রি শুরু করতে পারবেন</span>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar border border-gray-300 rounded-lg shadow-sm">
+                <table id="microplan-table" class="w-full text-xs text-center border-collapse">
+                    <thead>
+                        <tr class="bg-emerald-800 text-white font-bold">
+                            <th class="border border-emerald-700 p-2 w-16">সাব ব্লক</th>
+                            <th class="border border-emerald-700 p-2 min-w-[180px] text-left">টিকাদান কেন্দ্রের নাম ও স্থান</th>
+                            <th class="border border-emerald-700 p-2">জানুয়ারি</th>
+                            <th class="border border-emerald-700 p-2">ফেব্রুয়ারি</th>
+                            <th class="border border-emerald-700 p-2">মার্চ</th>
+                            <th class="border border-emerald-700 p-2">এপ্রিল</th>
+                            <th class="border border-emerald-700 p-2">মে</th>
+                            <th class="border border-emerald-700 p-2">জুন</th>
+                            <th class="border border-emerald-700 p-2">জুলাই</th>
+                            <th class="border border-emerald-700 p-2">আগস্ট</th>
+                            <th class="border border-emerald-700 p-2">সেপ্টেম্বর</th>
+                            <th class="border border-emerald-700 p-2">অক্টোবর</th>
+                            <th class="border border-emerald-700 p-2">নভেম্বর</th>
+                            <th class="border border-emerald-700 p-2">ডিসেম্বর</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer Credits -->
+        <footer class="mt-8 pt-4 border-t border-gray-300 text-center text-xs text-gray-600">
+            <p class="font-semibold text-gray-800">
+                প্রস্তুতকারক ও ডেভেলপার: <span class="text-emerald-700 font-bold">এস.এম.রাসেল কবির</span> | সম্প্রসারিত টিকাদান কর্মসূচি (EPI)
+            </p>
+            <p class="text-[11px] text-gray-500 mt-0.5">
+                সর্বস্বত্ব সংরক্ষিত © এস.এম.রাসেল কবির | সঠিক সেশন বিন্যাস ও ২৮ দিন সর্বনিম্ন ব্যবধান। 
+            </p>
+        </footer>
+
+    </div>
+
+    <!-- Date Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-5 border border-gray-200">
+            <h3 id="modalTitle" class="font-bold text-lg text-emerald-900 mb-3 border-b pb-2">তারিখ এন্ট্রি / সংশোধন</h3>
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-700 mb-1">তারিখ নির্বাচন করুন:</label>
+                <input type="date" id="modalDateInput" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <p class="text-[11px] text-emerald-800 bg-emerald-50 p-2 rounded border border-emerald-200 mt-2">
+                    💡 প্রথমবার তারিখ এন্ট্রি দিলে বাকি ঘরগুলো অটো জেনারেট হবে। পরবর্তীতে যেকোনো তারিখ পরিবর্তন করলে শুধুমাত্র উক্ত ঘরটির তারিখেই সংশোধন হবে।
+                </p>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-1.5 bg-gray-400 hover:bg-gray-500 text-white rounded text-xs font-bold">বাতিল</button>
+                <button onclick="saveModalDate()" class="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold">সংরক্ষণ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center/Block Name Edit Modal -->
+    <div id="editCenterModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-5 border border-gray-200">
+            <h3 id="modalCenterTitle" class="font-bold text-lg text-emerald-900 mb-3 border-b pb-2">ব্লক ও কেন্দ্রের নাম সম্পাদনা</h3>
+            <div class="mb-3">
+                <label class="block text-xs font-bold text-gray-700 mb-1">ব্লক সংকেত (যেমন: ক/১, খ/২):</label>
+                <input type="text" id="modalBlockInput" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-emerald-500 focus:border-emerald-500 font-bold">
+            </div>
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-700 mb-1">কেন্দ্রের নাম ও বিস্তারিত স্থান:</label>
+                <input type="text" id="modalCenterInput" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeCenterModal()" class="px-4 py-1.5 bg-gray-400 hover:bg-gray-500 text-white rounded text-xs font-bold">বাতিল</button>
+                <button onclick="saveCenterName()" class="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold">সংরক্ষণ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toBnNum(n) {
+            if (n === null || n === undefined) return '';
+            const bnNums = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+            return n.toString().replace(/\d/g, d => bnNums[d]);
+        }
+
+        const dayNamesBn = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
+        const dayShortBn = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'];
+        const monthNamesBn = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+
+        const displayCentersConfig = [
+            { code: "ক/১", name: "SDF ভবন, কাশিয়াডাঙ্গা দঃ পাড়া" },
+            { code: "ক/২", name: "মোতালেব মাষ্টার, কাশিয়াডাঙ্গা উঃপাড়া" },
+            { code: "খ/১", name: "ওজাহির মোড়ল, একড়া মোড়লপাড়া" },
+            { code: "খ/২", name: "মতিয়ার মোড়ল, বুঁইতা" },
+            { code: "গ/১", name: "সিসি, বাটরা" },
+            { code: "গ/২", name: "তবারক মাষ্টার, বাটরা বাজার" },
+            { code: "ঘ/১", name: "ছাত্তার মোড়ল, বাটরা বাজারের উঃ পাশে" },
+            { code: "ঘ/২", name: "আজগার মোড়ল, উত্তর বাঁটরা" }
+        ];
+
+        const executionOrderCodes = ["খ/২", "গ/১", "গ/২", "ঘ/১", "ঘ/২", "ক/১", "ক/২", "খ/১"];
+
+        const pairingRules = {
+            'mon-thu': [1, 4],
+            'sun-wed': [0, 3],
+            'sat-tue': [6, 2]
+        };
+
+        let activeHolidays = [];
+        let currentPlanData = [];
+        let manualMonthOverrides = {}; 
+        let isHolidayConfirmed = false;
+        let editingCenterIndex = null;
+        let editingMonthIndex = null;
+        let editingCenterNameIndex = null;
+        let isCalendarExpanded = true;
+
+        function getAutoGeneratedHolidays(year) {
+            let holidays = [
+                { date: `${year}-02-21`, name: "শহিদ দিবস ও আন্তর্জাতিক মাতৃভাষা দিবস" },
+                { date: `${year}-03-26`, name: "স্বাধীনতা ও জাতীয় দিবস" },
+                { date: `${year}-04-14`, name: "বাংলা নববর্ষ" },
+                { date: `${year}-05-01`, name: "মে দিবস" },
+                { date: `${year}-08-05`, name: "জুলাই গণঅভ্যুত্থান দিবস" },
+                { date: `${year}-12-16`, name: "বিজয় দিবস" },
+                { date: `${year}-12-25`, name: "বড়দিন" }
+            ];
+
+            if (year === 2026) {
+                holidays.push({ date: "2026-02-04", name: "পবিত্র শবে বরাত" });
+                holidays.push({ date: "2026-03-17", name: "পবিত্র শবে কদর" });
+                holidays.push({ date: "2026-03-18", name: "ঈদুল ফিতর ছুটি" });
+                holidays.push({ date: "2026-03-19", name: "ঈদুল ফিতর ছুটি" });
+                holidays.push({ date: "2026-03-20", name: "জুমাতুল বিদা / ঈদুল ফিতর ছুটি" });
+                holidays.push({ date: "2026-03-21", name: "পবিত্র ঈদুল ফিতর (মূল দিন)" });
+                holidays.push({ date: "2026-03-22", name: "ঈদুল ফিতর ছুটি" });
+                holidays.push({ date: "2026-03-23", name: "ঈদুল ফিতর ছুটি" });
+                holidays.push({ date: "2026-05-25", name: "ঈদুল আজহা ছুটি" });
+                holidays.push({ date: "2026-05-26", name: "ঈদুল আজহা ছুটি" });
+                holidays.push({ date: "2026-05-27", name: "পবিত্র ঈদুল আজহা (মূল দিন)" });
+                holidays.push({ date: "2026-05-28", name: "ঈদুল আজহা ছুটি" });
+                holidays.push({ date: "2026-05-29", name: "ঈদুল আজহা ছুটি" });
+                holidays.push({ date: "2026-05-30", name: "ঈদুল আজহা ছুটি" });
+                holidays.push({ date: "2026-06-26", name: "পবিত্র আশুরা" });
+                holidays.push({ date: "2026-08-25", name: "পবিত্র ঈদ-ই-মিলাদুন্নবী (সা.)" });
+                holidays.push({ date: "2026-09-04", name: "শুভ জন্মাষ্টমী" });
+                holidays.push({ date: "2026-10-20", name: "শারদীয় দুর্গাপূজা" });
+                holidays.push({ date: "2026-10-21", name: "শারদীয় দুর্গাপূজা (বিজয়া দশমী)" });
+            } else {
+                let yearDiff = year - 2026;
+                let shiftDays = Math.round(yearDiff * 10.63);
+
+                function shiftDate(baseDateStr, offset = 0) {
+                    let d = new Date(baseDateStr);
+                    d.setDate(d.getDate() - shiftDays + offset);
+                    d.setFullYear(year);
+                    let y = d.getFullYear();
+                    let m = String(d.getMonth() + 1).padStart(2, '0');
+                    let day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                }
+
+                holidays.push({ date: shiftDate("2026-02-04"), name: "পবিত্র শবে বরাত" });
+                holidays.push({ date: shiftDate("2026-03-17"), name: "পবিত্র শবে কদর" });
+                holidays.push({ date: shiftDate("2026-03-21"), name: "পবিত্র ঈদুল ফিতর" });
+                holidays.push({ date: shiftDate("2026-05-27"), name: "পবিত্র ঈদুল আজহা" });
+                holidays.push({ date: shiftDate("2026-06-26"), name: "পবিত্র আশুরা" });
+                holidays.push({ date: shiftDate("2026-08-25"), name: "পবিত্র ঈদ-ই-মিলাদুন্নবী (সা.)" });
+                holidays.push({ date: shiftDate("2026-10-21"), name: "শারদীয় দুর্গাপূজা" });
+            }
+
+            return holidays;
+        }
+
+        function initYearDropdown() {
+            const select = document.getElementById('year-select');
+            select.innerHTML = '';
+            for (let y = 2025; y <= 2150; y++) {
+                let opt = document.createElement('option');
+                opt.value = y;
+                opt.innerText = toBnNum(y);
+                if (y === 2026) opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+
+        function isHoliday(dateObj) {
+            if (dateObj.getDay() === 5) return true; // Friday
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            return activeHolidays.some(h => h.date === dateStr);
+        }
+
+        function onYearChange() {
+            resetConfirmation();
+        }
+
+        function resetConfirmation() {
+            isHolidayConfirmed = false;
+            manualMonthOverrides = {};
+            const year = parseInt(document.getElementById('year-select').value);
+            activeHolidays = [...getAutoGeneratedHolidays(year)];
+            renderHolidayTags();
+            renderGovCalendar();
+            
+            document.getElementById('lock-status-badge').className = "bg-red-100 text-red-800 px-2.5 py-1 rounded border border-red-300 text-xs font-bold";
+            document.getElementById('lock-status-badge').innerText = "⚠️ ছুটির তালিকা এখনো নিশ্চিত করা হয়নি";
+            document.getElementById('confirm-holiday-btn').disabled = false;
+            document.getElementById('table-instruction').innerText = "* ছুটির তালিকা নিশ্চিত করার পর এন্ট্রি শুরু করতে পারবেন";
+
+            currentPlanData = displayCentersConfig.map(c => ({
+                code: c.code,
+                name: c.name,
+                dates: new Array(12).fill(null)
+            }));
+            renderTable();
+        }
+
+        function confirmHolidayList() {
+            isHolidayConfirmed = true;
+            document.getElementById('lock-status-badge').className = "bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded border border-emerald-300 text-xs font-bold";
+            document.getElementById('lock-status-badge').innerText = "✅ ছুটির তালিকা নিশ্চিত করা হয়েছে";
+            document.getElementById('table-instruction').innerText = "* যেকোনো ঘরের উপর ক্লিক করে প্রথম এন্ট্রি দিন, বাকি ঘর স্বয়ংক্রিয়ভাবে সাজবে";
+            
+            currentPlanData = displayCentersConfig.map(c => ({
+                code: c.code,
+                name: c.name,
+                dates: new Array(12).fill(null)
+            }));
+            renderTable();
+        }
+
+        function renderHolidayTags() {
+            const container = document.getElementById('holiday-tags-container');
+            container.innerHTML = '';
+            activeHolidays.forEach((hObj, idx) => {
+                let tag = document.createElement('div');
+                tag.className = 'bg-amber-200 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 font-medium';
+                let d = new Date(hObj.date);
+                tag.innerHTML = `<span>${toBnNum(d.getDate())} ${monthNamesBn[d.getMonth()]} - ${hObj.name}</span> <span onclick="removeHoliday(${idx})" class="cursor-pointer text-red-600 font-bold ml-1 hover:text-red-800">&times;</span>`;
+                container.appendChild(tag);
+            });
+        }
+
+        function toggleCalendar() {
+            const grid = document.getElementById('gov-calendar-grid');
+            isCalendarExpanded = !isCalendarExpanded;
+            grid.classList.toggle('hidden', !isCalendarExpanded);
+        }
+
+        function renderGovCalendar() {
+            const container = document.getElementById('gov-calendar-grid');
+            container.innerHTML = '';
+            const year = parseInt(document.getElementById('year-select').value);
+
+            monthNamesBn.forEach((mName, mIdx) => {
+                let card = document.createElement('div');
+                card.className = 'bg-white border border-gray-200 rounded p-2 shadow-sm text-xs';
+
+                let title = document.createElement('div');
+                title.className = 'font-bold text-center bg-emerald-700 text-white rounded py-1 mb-1 text-xs';
+                title.innerText = `${mName} ${toBnNum(year)}`;
+                card.appendChild(title);
+
+                let table = document.createElement('table');
+                table.className = 'w-full text-center border-collapse text-[10px]';
+
+                let thead = document.createElement('tr');
+                dayShortBn.forEach(dName => {
+                    let th = document.createElement('th');
+                    th.className = 'border border-gray-200 p-0.5 bg-gray-100 font-semibold';
+                    th.innerText = dName;
+                    thead.appendChild(th);
+                });
+                table.appendChild(thead);
+
+                let firstDayObj = new Date(year, mIdx, 1);
+                let lastDayDate = new Date(year, mIdx + 1, 0).getDate();
+                let jsDay = firstDayObj.getDay(); 
+
+                let tbody = document.createElement('tbody');
+                let tr = document.createElement('tr');
+
+                for (let i = 0; i < jsDay; i++) {
+                    let td = document.createElement('td');
+                    td.className = 'border border-gray-100 p-0.5';
+                    tr.appendChild(td);
+                }
+
+                let currentDayInWeek = jsDay;
+
+                for (let dayNum = 1; dayNum <= lastDayDate; dayNum++) {
+                    if (currentDayInWeek === 7) {
+                        tbody.appendChild(tr);
+                        tr = document.createElement('tr');
+                        currentDayInWeek = 0;
+                    }
+
+                    let td = document.createElement('td');
+                    td.className = 'border border-gray-200 p-0.5 cursor-pointer hover:bg-yellow-100';
+                    td.innerText = toBnNum(dayNum);
+
+                    let dCheck = new Date(year, mIdx, dayNum);
+                    let dateStr = `${year}-${String(mIdx+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+
+                    if (dCheck.getDay() === 5) {
+                        td.className += ' bg-red-100 text-red-700 font-bold';
+                        td.title = "সাপ্তাহিক ছুটি (শুক্রবার)";
+                    }
+
+                    let matchedHoliday = activeHolidays.find(h => h.date === dateStr);
+                    if (matchedHoliday) {
+                        td.className += ' bg-amber-200 text-amber-900 font-bold';
+                        td.title = matchedHoliday.name;
+                    }
+
+                    tr.appendChild(td);
+                    currentDayInWeek++;
+                }
+
+                while (currentDayInWeek < 7 && currentDayInWeek > 0) {
+                    let td = document.createElement('td');
+                    td.className = 'border border-gray-100 p-0.5';
+                    tr.appendChild(td);
+                    currentDayInWeek++;
+                }
+                tbody.appendChild(tr);
+                table.appendChild(tbody);
+                card.appendChild(table);
+                container.appendChild(card);
+            });
+        }
+
+        function addCustomHoliday() {
+            if (isHolidayConfirmed) {
+                alert("ছুটির তালিকা ইতিমধ্যে নিশ্চিত করা হয়েছে। নতুন ছুটি যোগ করতে চাইলে পুনরায় 'ছুটির তালিকা নিশ্চিত করুন' বাটনে ক্লিক করুন।");
+                return;
+            }
+            const inputDate = document.getElementById('custom-holiday-date').value;
+            const inputName = document.getElementById('custom-holiday-name').value || "বিশেষ ছুটি";
+            
+            if (inputDate) {
+                if (!activeHolidays.some(h => h.date === inputDate)) {
+                    activeHolidays.push({ date: inputDate, name: inputName });
+                    renderHolidayTags();
+                    renderGovCalendar();
+                    document.getElementById('custom-holiday-date').value = '';
+                    document.getElementById('custom-holiday-name').value = '';
+                }
+            }
+        }
+
+        function removeHoliday(idx) {
+            if (isHolidayConfirmed) {
+                alert("ছুটির তালিকা ইতিমধ্যে নিশ্চিত করা হয়েছে।");
+                return;
+            }
+            activeHolidays.splice(idx, 1);
+            renderHolidayTags();
+            renderGovCalendar();
+        }
+
+        function generateMonthSessions(year, monthIndex, pairKey, monthOverrideMap = {}) {
+            const primaryPair = pairingRules[pairKey];
+            let lastDayDate = new Date(year, monthIndex + 1, 0).getDate();
+
+            let workingDays = [];
+            for (let d = 1; d <= lastDayDate; d++) {
+                let testDate = new Date(year, monthIndex, d);
+                if (!isHoliday(testDate)) {
+                    workingDays.push(d);
+                }
+            }
+
+            let sessions = {};
+            let usedDatesInMonth = new Set();
+            let hasAnyEntry = Object.keys(monthOverrideMap).length > 0;
+            if (!hasAnyEntry) return null;
+
+            for (let code of executionOrderCodes) {
+                if (monthOverrideMap[code]) {
+                    let mDate = new Date(monthOverrideMap[code]);
+                    sessions[code] = mDate;
+                    usedDatesInMonth.add(mDate.getDate());
+                }
+            }
+
+            for (let code of executionOrderCodes) {
+                if (sessions[code]) continue;
+
+                let candidateDays = workingDays.filter(d => !usedDatesInMonth.has(d));
+                let chosenDay = null;
+
+                for (let d of candidateDays) {
+                    let tDate = new Date(year, monthIndex, d);
+                    if (primaryPair.includes(tDate.getDay())) {
+                        chosenDay = d;
+                        break;
+                    }
+                }
+
+                if (!chosenDay && candidateDays.length > 0) {
+                    chosenDay = candidateDays[0];
+                }
+
+                if (!chosenDay) {
+                    chosenDay = workingDays[0] || 1;
+                }
+
+                let chosenDate = new Date(year, monthIndex, chosenDay);
+                sessions[code] = chosenDate;
+                usedDatesInMonth.add(chosenDay);
+            }
+
+            return sessions;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            currentPlanData.forEach((row, centerIdx) => {
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-emerald-50/40 transition";
+
+                let tdCode = document.createElement('td');
+                tdCode.className = 'border border-gray-300 p-2 font-bold bg-emerald-100 text-emerald-900 cursor-pointer hover:bg-emerald-200 transition';
+                tdCode.innerText = row.code;
+                tdCode.onclick = () => openCenterEditModal(centerIdx);
+                tr.appendChild(tdCode);
+
+                let tdName = document.createElement('td');
+                tdName.className = 'border border-gray-300 p-2 text-left font-medium cursor-pointer hover:text-emerald-700 hover:bg-emerald-100/50 transition';
+                tdName.innerText = row.name;
+                tdName.onclick = () => openCenterEditModal(centerIdx);
+                tr.appendChild(tdName);
+
+                row.dates.forEach((dObj, monthIdx) => {
+                    let td = document.createElement('td');
+                    td.className = 'border border-gray-300 p-1.5 cursor-pointer hover:bg-amber-100 transition relative';
+
+                    if (!dObj) {
+                        td.innerHTML = `<div class="text-gray-400 text-[10px] italic">এন্ট্রি দিন</div>`;
+                        if (isHolidayConfirmed) {
+                            td.onclick = () => openEditModal(centerIdx, monthIdx);
+                        }
+                        tr.appendChild(td);
+                        return;
+                    }
+
+                    let dateNumStr = toBnNum(dObj.getDate());
+                    let dayNameStr = dayShortBn[dObj.getDay()];
+
+                    let gapText = '';
+                    let isWarning = false;
+
+                    if (monthIdx > 0) {
+                        let prevD = row.dates[monthIdx - 1];
+                        if (prevD) {
+                            let diffTime = Math.abs(dObj - prevD);
+                            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            gapText = `${toBnNum(diffDays)} দিন`;
+                            if (diffDays < 28) {
+                                isWarning = true;
+                            }
+                        }
+                    }
+
+                    td.innerHTML = `
+                        <div class="font-bold text-gray-900 text-sm flex items-center justify-center">
+                            ${dateNumStr}
+                        </div>
+                        <div class="text-[10px] text-gray-500 font-medium">${dayNameStr}</div>
+                        ${gapText ? `<div class="text-[9px] ${isWarning ? 'text-red-600 font-extrabold bg-red-50 rounded' : 'text-emerald-700'} font-semibold mt-0.5">${gapText}</div>` : ''}
+                    `;
+
+                    if (isHolidayConfirmed) {
+                        td.onclick = () => openEditModal(centerIdx, monthIdx);
+                    }
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openCenterEditModal(cIdx) {
+            editingCenterNameIndex = cIdx;
+            document.getElementById('modalCenterTitle').innerText = `ব্লক ও কেন্দ্রের নাম সম্পাদনা`;
+            document.getElementById('modalBlockInput').value = currentPlanData[cIdx].code;
+            document.getElementById('modalCenterInput').value = currentPlanData[cIdx].name;
+            document.getElementById('editCenterModal').classList.remove('hidden');
+            document.getElementById('editCenterModal').classList.add('flex');
+        }
+
+        function closeCenterModal() {
+            document.getElementById('editCenterModal').classList.add('hidden');
+            document.getElementById('editCenterModal').classList.remove('flex');
+        }
+
+        function saveCenterName() {
+            const newCode = document.getElementById('modalBlockInput').value;
+            const newName = document.getElementById('modalCenterInput').value;
+            if (editingCenterNameIndex !== null) {
+                if (newCode) currentPlanData[editingCenterNameIndex].code = newCode;
+                if (newName) currentPlanData[editingCenterNameIndex].name = newName;
+                renderTable();
+                closeCenterModal();
+            }
+        }
+
+        function openEditModal(centerIdx, monthIdx) {
+            if (!isHolidayConfirmed) {
+                alert("প্রথমে ছুটির তালিকা নিশ্চিত করুন।");
+                return;
+            }
+            editingCenterIndex = centerIdx;
+            editingMonthIndex = monthIdx;
+
+            const currentObj = currentPlanData[centerIdx].dates[monthIdx];
+            let dateStr = "";
+            if (currentObj) {
+                const year = currentObj.getFullYear();
+                const month = String(currentObj.getMonth() + 1).padStart(2, '0');
+                const day = String(currentObj.getDate()).padStart(2, '0');
+                dateStr = `${year}-${month}-${day}`;
+            } else {
+                const year = parseInt(document.getElementById('year-select').value);
+                dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-01`;
+            }
+
+            document.getElementById('modalTitle').innerText = `${currentPlanData[centerIdx].code} (${currentPlanData[centerIdx].name}) - ${monthNamesBn[monthIdx]} মাসের তারিখ`;
+            document.getElementById('modalDateInput').value = dateStr;
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('flex');
+        }
+
+        function saveModalDate() {
+            const val = document.getElementById('modalDateInput').value;
+            if (val) {
+                const parts = val.split('-');
+                let selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+                let code = currentPlanData[editingCenterIndex].code;
+                const year = parseInt(document.getElementById('year-select').value);
+                const pairKey = document.getElementById('pair-select').value;
+
+                if (!manualMonthOverrides[editingMonthIndex]) {
+                    manualMonthOverrides[editingMonthIndex] = {};
+                }
+
+                let isFirstEntryInMonth = true;
+                for (let c of currentPlanData) {
+                    if (c.dates[editingMonthIndex] !== null) {
+                        isFirstEntryInMonth = false;
+                        break;
+                    }
+                }
+
+                if (isFirstEntryInMonth) {
+                    manualMonthOverrides[editingMonthIndex][code] = selectedDate;
+                    let monthSessions = generateMonthSessions(year, editingMonthIndex, pairKey, manualMonthOverrides[editingMonthIndex]);
+                    
+                    if (monthSessions) {
+                        for (let cCode of executionOrderCodes) {
+                            let currDate = monthSessions[cCode];
+                            let cIdx = currentPlanData.findIndex(c => c.code === cCode);
+                            if (cIdx !== -1) {
+                                currentPlanData[cIdx].dates[editingMonthIndex] = currDate;
+                            }
+                        }
+                    }
+                } else {
+                    manualMonthOverrides[editingMonthIndex][code] = selectedDate;
+                    currentPlanData[editingCenterIndex].dates[editingMonthIndex] = selectedDate;
+                }
+
+                renderTable();
+                closeModal();
+            }
+        }
+
+        // Export Functions
+        function exportToPDF() {
+            if (!isHolidayConfirmed) {
+                alert("দয়া করে প্রথমে ছুটির তালিকা নিশ্চিত করুন।");
+                return;
+            }
+            const element = document.getElementById('export-area');
+            const opt = {
+                margin:       [0.3, 0.3, 0.3, 0.3],
+                filename:     `EPI_Microplan_${document.getElementById('year-select').value}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function exportToImage() {
+            if (!isHolidayConfirmed) {
+                alert("দয়া করে প্রথমে ছুটির তালিকা নিশ্চিত করুন।");
+                return;
+            }
+            const element = document.getElementById('export-area');
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `EPI_Microplan_${document.getElementById('year-select').value}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function exportToWord() {
+            if (!isHolidayConfirmed) {
+                alert("দয়া করে প্রথমে ছুটির তালিকা নিশ্চিত করুন।");
+                return;
+            }
+            const year = document.getElementById('year-select').value;
+            let header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+                "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+                "xmlns='http://www.w3.org/TR/REC-html40'>"+
+                "<head><meta charset='utf-8'><title>EPI Microplan</title></head><body>";
+            let footer = "</body></html>";
+            let html = header + document.getElementById('export-area').innerHTML + footer;
+
+            let url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
+            let downloadLink = document.createElement("a");
+            document.body.appendChild(downloadLink);
+            downloadLink.href = url;
+            downloadLink.download = `EPI_Microplan_${year}.doc`;
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        function exportToExcel() {
+            if (!isHolidayConfirmed) {
+                alert("দয়া করে প্রথমে ছুটির তালিকা নিশ্চিত করুন।");
+                return;
+            }
+            let csvContent = "\uFEFF";
+            csvContent += "ব্লক,টিকাদান কেন্দ্রের নাম ও স্থান,জানুয়ারি,ফেব্রুয়ারি,মার্চ,এপ্রিল,মে,জুন,জুলাই,আগস্ট,সেপ্টেম্বর,অক্টোবর,নভেম্বর,ডিসেম্বর\n";
+
+            currentPlanData.forEach(row => {
+                let line = `"${row.code}","${row.name}"`;
+                row.dates.forEach(dObj => {
+                    let dateStr = dObj ? `${toBnNum(dObj.getDate())}/${toBnNum(dObj.getMonth()+1)} (${dayShortBn[dObj.getDay()]})` : '';
+                    line += `,"${dateStr}"`;
+                });
+                csvContent += line + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `EPI_Microplan_${document.getElementById('year-select').value}_${document.getElementById('pair-select').value}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.onload = function() {
+            initYearDropdown();
+            resetConfirmation();
+        };
+    </script>
+</body>
+</html>
